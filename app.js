@@ -63,3 +63,100 @@ const galleryItems = [
     description: 'Lighthouse Coast Sea',
   },
 ];
+
+const refs = {
+  galleryContainer: document.querySelector('.js-gallery'),
+  lightboxContainer: document.querySelector('.js-lightbox'),
+  lightboxOverlay: document.querySelector('.js-lightbox div'),
+  lightboxImageEl: document.querySelector('.js-lightbox img'),
+  closeLightboxBtnEl: document.querySelector('[data-action="close-lightbox"]'),
+};
+let imagesSrcArray = [];
+
+refs.galleryContainer.innerHTML = createGalleryItemsMarkup(galleryItems);
+
+refs.galleryContainer.addEventListener('click', onGalleryContainerClick);
+refs.lightboxOverlay.addEventListener('click', onCloseModal);
+refs.closeLightboxBtnEl.addEventListener('click', onCloseModal);
+
+function createGalleryItemsMarkup(items) {
+  return items
+    .map(({ preview, original, description }) => {
+      return `
+    <li class="gallery__item">
+      <a
+        class="gallery__link"
+        href="${original}"
+      >
+        <img
+          class="gallery__image"
+          src="${preview}"
+          data-source="${original}"
+          alt="${description}"
+        />
+      </a>
+    </li>
+    `;
+    })
+    .join('');
+}
+
+function onGalleryContainerClick(evt) {
+  if (evt.target.nodeName !== 'IMG') {
+    return;
+  }
+
+  evt.preventDefault();
+  const lightboxImageSrc = evt.target.dataset.source;
+  const lightboxImageDescr = evt.target.alt;
+
+  refs.lightboxImageEl.src = lightboxImageSrc;
+  refs.lightboxImageEl.alt = lightboxImageDescr;
+  onOpenModal();
+  imagesSrcArray = galleryItems.map(image => image.original);
+}
+
+function onOpenModal() {
+  window.addEventListener('keydown', onKeyPress);
+  refs.lightboxContainer.classList.add('is-open');
+}
+
+function onCloseModal() {
+  window.removeEventListener('keydown', onKeyPress);
+  refs.lightboxContainer.classList.remove('is-open');
+
+  refs.lightboxImageEl.src = '';
+  refs.lightboxImageEl.alt = '';
+}
+
+function onKeyPress(evt) {
+  const ESC_KEY_CODE = 'Escape';
+  const LEFT_KEY_CODE = 'ArrowLeft';
+  const RIGHT_KEY_CODE = 'ArrowRight';
+
+  if (evt.code === ESC_KEY_CODE) {
+    onCloseModal();
+  } else if (evt.code === LEFT_KEY_CODE) {
+    onLeftKeyPress();
+  } else if (evt.code === RIGHT_KEY_CODE) {
+    onRightKeyPress();
+  }
+}
+
+function onLeftKeyPress() {
+  const indexOfCurrentImg = imagesSrcArray.indexOf(refs.lightboxImageEl.src);
+
+  refs.lightboxImageEl.src =
+    indexOfCurrentImg === 0
+      ? imagesSrcArray[imagesSrcArray.length - 1]
+      : imagesSrcArray[indexOfCurrentImg - 1];
+}
+
+function onRightKeyPress() {
+  const indexOfCurrentImg = imagesSrcArray.indexOf(refs.lightboxImageEl.src);
+
+  refs.lightboxImageEl.src =
+    indexOfCurrentImg === imagesSrcArray.length - 1
+      ? imagesSrcArray[0]
+      : imagesSrcArray[indexOfCurrentImg + 1];
+}
